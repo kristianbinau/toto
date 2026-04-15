@@ -18,8 +18,8 @@ pub struct EnigoBackend {
 
 impl EnigoBackend {
     pub fn new() -> Result<Self, EngineError> {
-        let inner = Enigo::new(&Settings::default())
-            .map_err(|e| EngineError::Backend(e.to_string()))?;
+        let inner =
+            Enigo::new(&Settings::default()).map_err(|e| EngineError::Backend(e.to_string()))?;
         Ok(Self { inner })
     }
 }

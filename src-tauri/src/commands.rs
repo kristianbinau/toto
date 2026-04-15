@@ -27,11 +27,7 @@ pub fn is_running(engine: State<'_, EngineState>, id: String) -> bool {
 
 #[tauri::command]
 pub fn running_scripts(engine: State<'_, EngineState>) -> Vec<String> {
-    engine
-        .running_ids()
-        .into_iter()
-        .map(|id| id.0)
-        .collect()
+    engine.running_ids().into_iter().map(|id| id.0).collect()
 }
 
 #[tauri::command]

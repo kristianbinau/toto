@@ -3,20 +3,19 @@ use std::time::{Duration, Instant};
 
 use toto_engine::action::{Delay, MouseClick};
 use toto_engine::backend::{Backend, MockBackend, MockEvent};
-use toto_engine::{
-    Action, Direction, Engine, EngineError, MouseButton, Repeat, Script, ScriptId,
-};
+use toto_engine::{Action, Direction, Engine, EngineError, MouseButton, Repeat, Script, ScriptId};
 
 /// Shared-handle factory: every runner thread gets its own `MockBackend`
 /// handle but all handles share a single event buffer, so the test can
 /// observe events from outside the runner.
-fn shared_mock() -> (MockBackend, impl Fn() -> Result<Box<dyn Backend>, EngineError> + Send + Sync)
-{
+fn shared_mock() -> (
+    MockBackend,
+    impl Fn() -> Result<Box<dyn Backend>, EngineError> + Send + Sync,
+) {
     let observer = MockBackend::new();
     let for_factory = observer.clone();
-    let factory = move || -> Result<Box<dyn Backend>, EngineError> {
-        Ok(Box::new(for_factory.clone()))
-    };
+    let factory =
+        move || -> Result<Box<dyn Backend>, EngineError> { Ok(Box::new(for_factory.clone())) };
     (observer, factory)
 }
 
@@ -39,7 +38,9 @@ fn runs_bounded_script_to_completion() {
     let (observer, factory) = shared_mock();
     let engine = Engine::new(factory);
 
-    engine.start(click_script("five", Repeat::Times(5), 10.0)).unwrap();
+    engine
+        .start(click_script("five", Repeat::Times(5), 10.0))
+        .unwrap();
 
     // Wait for completion (5 iterations * ~10ms + slack).
     let deadline = Instant::now() + Duration::from_secs(2);
@@ -63,7 +64,9 @@ fn infinite_script_stops_promptly() {
     let (observer, factory) = shared_mock();
     let engine = Engine::new(factory);
 
-    engine.start(click_script("inf", Repeat::Infinite, 20.0)).unwrap();
+    engine
+        .start(click_script("inf", Repeat::Infinite, 20.0))
+        .unwrap();
     thread::sleep(Duration::from_millis(120));
 
     let stop_start = Instant::now();
@@ -91,8 +94,12 @@ fn concurrent_scripts_are_independent() {
     let (observer, factory) = shared_mock();
     let engine = Engine::new(factory);
 
-    engine.start(click_script("a", Repeat::Infinite, 20.0)).unwrap();
-    engine.start(click_script("b", Repeat::Infinite, 20.0)).unwrap();
+    engine
+        .start(click_script("a", Repeat::Infinite, 20.0))
+        .unwrap();
+    engine
+        .start(click_script("b", Repeat::Infinite, 20.0))
+        .unwrap();
 
     thread::sleep(Duration::from_millis(100));
     assert!(engine.is_running(&ScriptId::new("a")));
@@ -119,7 +126,9 @@ fn starting_running_script_errors() {
     let (_observer, factory) = shared_mock();
     let engine = Engine::new(factory);
 
-    engine.start(click_script("dup", Repeat::Infinite, 20.0)).unwrap();
+    engine
+        .start(click_script("dup", Repeat::Infinite, 20.0))
+        .unwrap();
     let err = engine.start(click_script("dup", Repeat::Infinite, 20.0));
     assert!(matches!(err, Err(EngineError::AlreadyRunning(_))));
     engine.stop(&ScriptId::new("dup")).unwrap();
