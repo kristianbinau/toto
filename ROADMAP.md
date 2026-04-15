@@ -65,9 +65,27 @@ Build the backend before the UI. Everything should be testable via Tauri devtool
 
 ## Phase 2 — Vue UI
 
-Replace `App.vue` with a real layout. Use NuxtUI components throughout (`UButton`, `UInput`, `USelect`, `UCard`, `UToggle`, `UBadge`, etc.).
+Replace `App.vue` with a real layout. Use NuxtUI components throughout (`UButton`, `UInput`, `USelect`, `UCard`, `UBadge`, `UKbd`, `UDropdownMenu`, etc.). Two modes: **Simple** (one-button autoclicker) and **Advanced** (full profile editor matching the engine capability surface).
+
+- [x] Typed invoke wrapper ([src/lib/tauri.ts](src/lib/tauri.ts)) + TS mirror of engine types ([src/lib/types.ts](src/lib/types.ts))
+- [x] Profiles store composable ([src/stores/profiles.ts](src/stores/profiles.ts)) — single source of truth for UI state, wraps `totoApi`
+- [x] App shell with Simple/Advanced mode switch ([src/App.vue](src/App.vue))
+- [x] Simple mode: Left/Right button picker, interval input, start/stop ([src/components/SimpleMode.vue](src/components/SimpleMode.vue)) — builds a preset `Script` with id `__simple__` and drives it through `toggle_script`
+- [x] Advanced mode: profile list, profile editor, action list editor ([src/components/advanced/](src/components/advanced/))
+- [x] `ActionRow` component covering Click / Key / Move / Delay ([src/components/advanced/ActionRow.vue](src/components/advanced/ActionRow.vue))
+- [x] Running-state poll (500ms) wired to `running_scripts` command — handled inside the profiles store, reconciles `runningIds` so indicators clear when a `Times(n)` script finishes naturally
+- [x] Stop-all destructive button in the profile list
 
 ## Phase 3 — Persistence & Profiles
+
+Persist UI state via `@tauri-apps/plugin-store`; bind per-profile and simple-mode toggle hotkeys via `@tauri-apps/plugin-global-shortcut`. Everything centralised in [src/stores/profiles.ts](src/stores/profiles.ts).
+
+- [x] Hydrate store from `toto.json` on startup via `Store.load` — runs in [src/main.ts](src/main.ts) before `app.mount`
+- [x] Debounced auto-save (~250ms) on any state change via `watch(..., { deep: true })`
+- [x] First-run seed: default simple config (`Left`, 100 ms) and empty profile list
+- [x] `HotkeyInput` component ([src/components/common/HotkeyInput.vue](src/components/common/HotkeyInput.vue)) — captures a keydown and normalises to a Tauri accelerator string (`CmdOrCtrl+Shift+K`)
+- [x] Register/unregister per-profile and simple-mode hotkeys via plugin-global-shortcut; centralised reconciliation in [src/lib/hotkeys.ts](src/lib/hotkeys.ts)
+- [x] Profile delete / rename: stops the old script id and re-reconciles hotkeys automatically
 
 ## Phase 4 — System Tray
 

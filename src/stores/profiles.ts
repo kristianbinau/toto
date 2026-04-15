@@ -1,0 +1,255 @@
+import { reactive, ref, watch, computed } from "vue";
+import { Store } from "@tauri-apps/plugin-store";
+import {
+  DEFAULT_STATE,
+  SIMPLE_SCRIPT_ID,
+  buildSimpleScript,
+  type AppMode,
+  type PersistedState,
+  type ProfileEntry,
+  type Script,
+  type SimpleConfig,
+} from "../lib/types";
+import { totoApi } from "../lib/tauri";
+import { reconcile, unbindAll, type HotkeyHandler } from "../lib/hotkeys";
+
+const STORE_FILE = "toto.json";
+const STATE_KEY = "state";
+
+type StoreShape = {
+  simpleConfig: SimpleConfig;
+  activeMode: AppMode;
+  profiles: ProfileEntry[];
+  runningIds: Set<string>;
+  hydrated: boolean;
+  hydrate: () => Promise<void>;
+  dispose: () => Promise<void>;
+
+  setActiveMode: (mode: AppMode) => void;
+  updateSimpleConfig: (patch: Partial<SimpleConfig>) => void;
+  simpleScript: () => Script;
+
+  addProfile: () => ProfileEntry;
+  updateProfile: (index: number, entry: ProfileEntry) => void;
+  duplicateProfile: (index: number) => void;
+  deleteProfile: (index: number) => Promise<void>;
+
+  toggleScript: (script: Script) => Promise<void>;
+  stopAll: () => Promise<void>;
+
+  isRunning: (id: string) => boolean;
+};
+
+let _singleton: StoreShape | null = null;
+let _tauriStore: Store | null = null;
+let _pollTimer: number | null = null;
+let _saveTimer: number | null = null;
+let _lastHotkeyReq = 0;
+
+function newProfile(index: number): ProfileEntry {
+  return {
+    script: {
+      id: `profile-${index + 1}`,
+      actions: [
+        { type: "Click", button: "Left", direction: "Click" },
+        { type: "Delay", ms: 100 },
+      ],
+      repeat: { mode: "Infinite" },
+    },
+  };
+}
+
+function deepClone<T>(v: T): T {
+  return JSON.parse(JSON.stringify(v));
+}
+
+export function useProfilesStore(): StoreShape {
+  if (_singleton) return _singleton;
+
+  const simpleConfig = reactive<SimpleConfig>({ ...DEFAULT_STATE.simpleConfig });
+  const profiles = reactive<ProfileEntry[]>([]);
+  const activeMode = ref<AppMode>(DEFAULT_STATE.activeMode);
+  const runningIds = reactive<Set<string>>(new Set());
+  const hydrated = ref(false);
+
+  const simpleScript = () => buildSimpleScript(simpleConfig);
+
+  function schedulePersist() {
+    if (!hydrated.value) return;
+    if (_saveTimer !== null) clearTimeout(_saveTimer);
+    _saveTimer = window.setTimeout(() => {
+      _saveTimer = null;
+      void persist();
+    }, 250);
+  }
+
+  async function persist() {
+    if (!_tauriStore) return;
+    const snapshot: PersistedState = {
+      version: 1,
+      activeMode: activeMode.value,
+      simpleConfig: deepClone(simpleConfig),
+      profiles: deepClone(profiles),
+    };
+    try {
+      await _tauriStore.set(STATE_KEY, snapshot);
+      await _tauriStore.save();
+    } catch (err) {
+      console.error("failed to persist state", err);
+    }
+  }
+
+  async function syncHotkeys() {
+    const req = ++_lastHotkeyReq;
+    const desired = new Map<string, HotkeyHandler>();
+    if (simpleConfig.hotkey) {
+      const accel = simpleConfig.hotkey;
+      desired.set(accel, () => {
+        void totoApi.toggleScript(simpleScript()).then(refreshRunning);
+      });
+    }
+    for (const entry of profiles) {
+      if (!entry.hotkey) continue;
+      const script = deepClone(entry.script);
+      desired.set(entry.hotkey, () => {
+        void totoApi.toggleScript(script).then(refreshRunning);
+      });
+    }
+    try {
+      await reconcile(desired);
+    } catch (err) {
+      if (req === _lastHotkeyReq) {
+        console.error("hotkey reconcile failed", err);
+      }
+    }
+  }
+
+  async function refreshRunning() {
+    try {
+      const ids = await totoApi.runningScripts();
+      runningIds.clear();
+      for (const id of ids) runningIds.add(id);
+    } catch (err) {
+      console.error("failed to poll running scripts", err);
+    }
+  }
+
+  const shape: StoreShape = {
+    simpleConfig,
+    get activeMode(): AppMode {
+      return activeMode.value;
+    },
+    set activeMode(v: AppMode) {
+      activeMode.value = v;
+    },
+    profiles,
+    runningIds,
+    get hydrated(): boolean {
+      return hydrated.value;
+    },
+
+    async hydrate() {
+      if (hydrated.value) return;
+      _tauriStore = await Store.load(STORE_FILE, { autoSave: false, defaults: {} });
+      const loaded = (await _tauriStore.get<PersistedState>(STATE_KEY)) ?? null;
+      const initial = loaded ?? deepClone(DEFAULT_STATE);
+
+      Object.assign(simpleConfig, initial.simpleConfig);
+      profiles.splice(0, profiles.length, ...deepClone(initial.profiles));
+      activeMode.value = initial.activeMode;
+      hydrated.value = true;
+
+      watch(simpleConfig, schedulePersist, { deep: true });
+      watch(profiles, schedulePersist, { deep: true });
+      watch(activeMode, schedulePersist);
+
+      watch(
+        [simpleConfig, profiles],
+        () => {
+          void syncHotkeys();
+        },
+        { deep: true },
+      );
+
+      await syncHotkeys();
+      await refreshRunning();
+      if (_pollTimer === null) {
+        _pollTimer = window.setInterval(refreshRunning, 500);
+      }
+    },
+
+    async dispose() {
+      if (_pollTimer !== null) {
+        clearInterval(_pollTimer);
+        _pollTimer = null;
+      }
+      await unbindAll();
+    },
+
+    setActiveMode(mode: AppMode) {
+      activeMode.value = mode;
+    },
+
+    updateSimpleConfig(patch: Partial<SimpleConfig>) {
+      Object.assign(simpleConfig, patch);
+    },
+
+    simpleScript,
+
+    addProfile() {
+      const entry = newProfile(profiles.length);
+      profiles.push(entry);
+      return entry;
+    },
+
+    updateProfile(index: number, entry: ProfileEntry) {
+      const prev = profiles[index];
+      if (!prev) return;
+      // If the id changed, stop the old id first.
+      if (prev.script.id !== entry.script.id) {
+        void totoApi.stopScript(prev.script.id).catch(() => {});
+      }
+      profiles.splice(index, 1, deepClone(entry));
+    },
+
+    duplicateProfile(index: number) {
+      const src = profiles[index];
+      if (!src) return;
+      const copy = deepClone(src);
+      copy.script.id = `${copy.script.id}-copy`;
+      copy.hotkey = undefined;
+      profiles.splice(index + 1, 0, copy);
+    },
+
+    async deleteProfile(index: number) {
+      const entry = profiles[index];
+      if (!entry) return;
+      await totoApi.stopScript(entry.script.id).catch(() => {});
+      profiles.splice(index, 1);
+    },
+
+    async toggleScript(script: Script) {
+      await totoApi.toggleScript(script);
+      await refreshRunning();
+    },
+
+    async stopAll() {
+      await totoApi.stopAll();
+      await refreshRunning();
+    },
+
+    isRunning(id: string) {
+      return runningIds.has(id);
+    },
+  };
+
+  _singleton = shape;
+  return shape;
+}
+
+export function useRunningCount() {
+  const store = useProfilesStore();
+  return computed(() => store.runningIds.size);
+}
+
+export { SIMPLE_SCRIPT_ID };

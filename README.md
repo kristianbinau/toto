@@ -140,6 +140,64 @@ const script = {
 await window.__TAURI__.core.invoke("start_script", { script });
 ```
 
+## UI modes
+
+The window is a fixed 340×480, always-on-top, borderless surface. Two modes, switchable from the header:
+
+### Simple mode
+
+Single-click configuration for the common case:
+
+- Button: **Left** or **Right**
+- Interval: milliseconds between clicks (clamped to 10 ms minimum)
+- Optional global toggle hotkey
+
+Starting it synthesises a preset `Script` with id `__simple__`:
+
+```ts
+{
+  id: "__simple__",
+  repeat: { mode: "Infinite" },
+  actions: [
+    { type: "Click", button: "Left", direction: "Click" },
+    { type: "Delay", ms: 100 },
+  ],
+}
+```
+
+It goes through the normal `toggle_script` command — Rust has no special case for simple mode.
+
+### Advanced mode
+
+A profile list with full CRUD. Each profile owns:
+
+- A name that is used verbatim as the engine's `ScriptId`
+- An ordered action list (`Click` / `Key` / `Move` / `Delay`) edited in place with reorder and delete
+- A `Repeat` mode: `Once` / `Times(n)` / `Infinite`
+- An optional toggle hotkey
+
+The profile list has a destructive **Stop all** button wired to `stop_all`. Running state (the green badge and `Stop` labels) is driven by a 500 ms poll of `running_scripts`, so indicators clear even when a `Times(n)` script finishes on its own or a hotkey toggles it while the editor is closed.
+
+## Persistence
+
+UI state is persisted via `@tauri-apps/plugin-store` into a single file, `toto.json`, in the platform's `app_data_dir`. Schema:
+
+```ts
+type PersistedState = {
+  version: 1;
+  activeMode: "simple" | "advanced";
+  simpleConfig: { button: "Left" | "Right"; intervalMs: number; hotkey?: string };
+  profiles: Array<{
+    script: Script;     // same shape as the tauri command payload
+    hotkey?: string;    // e.g. "CmdOrCtrl+Shift+1"
+  }>;
+};
+```
+
+Writes are debounced (~250 ms) and triggered from a deep `watch` on the reactive store. The profiles composable is the single source of truth; components never touch the store plugin directly.
+
+Global hotkeys are bound via `@tauri-apps/plugin-global-shortcut`. When the state changes, [src/lib/hotkeys.ts](src/lib/hotkeys.ts) reconciles the set of registered accelerators (unregister removed, register added). Each bound hotkey simply invokes `toggle_script` with the associated profile's script.
+
 ## Architecture Notes
 
 ### Concurrency model
@@ -158,8 +216,8 @@ await window.__TAURI__.core.invoke("start_script", { script });
 
 ### Settings persistence
 
-`tauri-plugin-store` is registered but not yet consumed. Script definitions and hotkey bindings will be stored via the plugin in Phase 3.
+Profiles, the simple-mode config, the active mode, and hotkey bindings are persisted via `tauri-plugin-store` — see the [Persistence](#persistence) section above for the schema. The profiles composable in [src/stores/profiles.ts](src/stores/profiles.ts) owns hydration, debounced save, and hotkey reconciliation.
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md). Phase 0 (scaffolding) and Phase 1 (engine) are complete; Phase 2 (Vue UI) is next.
+See [ROADMAP.md](ROADMAP.md). Phases 0–3 (scaffolding, engine, Vue UI, persistence) are complete; Phase 4 (system tray) is next.

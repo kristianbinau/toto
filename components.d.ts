@@ -11,10 +11,23 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ActionList: typeof import('./src/components/advanced/ActionList.vue')['default']
+    ActionRow: typeof import('./src/components/advanced/ActionRow.vue')['default']
+    HotkeyInput: typeof import('./src/components/common/HotkeyInput.vue')['default']
+    ProfileCard: typeof import('./src/components/advanced/ProfileCard.vue')['default']
+    ProfileEditor: typeof import('./src/components/advanced/ProfileEditor.vue')['default']
+    ProfileList: typeof import('./src/components/advanced/ProfileList.vue')['default']
+    RepeatEditor: typeof import('./src/components/advanced/RepeatEditor.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SimpleMode: typeof import('./src/components/SimpleMode.vue')['default']
     UApp: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/App.vue')['default']
+    UBadge: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Badge.vue')['default']
     UButton: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Button.vue')['default']
     UCard: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Card.vue')['default']
+    UDropdownMenu: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/DropdownMenu.vue')['default']
+    UInput: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Input.vue')['default']
+    UKbd: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Kbd.vue')['default']
+    USelect: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Select.vue')['default']
   }
 }
