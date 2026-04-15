@@ -97,6 +97,25 @@ cargo build --workspace                            # everything, including the T
 
 The `--no-default-features` flag disables the `enigo-backend` feature so the test suite runs without pulling X11/linker dependencies. Tests never touch real input — they use `MockBackend`, which records events into a shared buffer.
 
+#### Sleep-precision benchmark
+
+```bash
+cargo bench -p toto-engine
+```
+
+Runs `benches/sleep_accuracy.rs` via Criterion and measures actual sleep duration at 0.1, 0.5, 1, 2, 5, 10, 20, and 50 ms. HTML reports are written to `target/criterion/`. Use this to verify the spin-wait and hybrid thresholds on your hardware — expected ranges on a typical Windows machine:
+
+| Target | Acceptable range | Strategy |
+|--------|-----------------|----------|
+| 0.1 ms | 0.05 – 0.5 ms  | spin     |
+| 0.5 ms | 0.4 – 1.0 ms   | spin     |
+| 1.0 ms | 0.9 – 1.5 ms   | spin     |
+| 5.0 ms | 4.5 – 6.5 ms   | hybrid   |
+| 10.0 ms | 9.0 – 12.0 ms | hybrid   |
+| 50.0 ms | 48 – 53 ms    | recv_timeout |
+
+Sub-2 ms delays consume one CPU core while spinning; this is intentional and expected.
+
 ### Tauri commands (from the frontend)
 
 The backend exposes these commands via `@tauri-apps/api/core`'s `invoke(...)`. All payload types are `Serialize`/`Deserialize` on the engine types, so they cross the boundary directly.
@@ -123,7 +142,7 @@ type Action =
   | { type: "Click", button: "Left" | "Right" | "Middle", direction: "Press" | "Release" | "Click" }
   | { type: "Key", key: { name: "Unicode", value: string } | { name: "Return" } | { name: "Tab" } | { name: "Space" } | { name: "Escape" } | { name: "Backspace" }, direction: "Press" | "Release" | "Click" }
   | { type: "Move", x: number, y: number, coord: "Absolute" | "Relative" }
-  | { type: "Delay", ms: number };   // clamped to a minimum of 10ms
+  | { type: "Delay", ms: number };   // fractional ms supported (e.g. 0.5 = 500 µs); minimum 0.1 enforced by the UI
 ```
 
 Example from the devtools console:
@@ -142,14 +161,14 @@ await window.__TAURI__.core.invoke("start_script", { script });
 
 ## UI modes
 
-The window is a fixed 340×480, always-on-top, borderless surface. Two modes, switchable from the header:
+The window is a fixed 340×480, always-on-top. Two modes, switchable from the header:
 
 ### Simple mode
 
 Single-click configuration for the common case:
 
 - Button: **Left** or **Right**
-- Interval: milliseconds between clicks (clamped to 10 ms minimum)
+- Interval: milliseconds between clicks (fractional values supported, e.g. 0.5 ms; minimum 0.1 ms)
 - Optional global toggle hotkey
 
 Starting it synthesises a preset `Script` with id `__simple__`:
@@ -204,7 +223,7 @@ Global hotkeys are bound via `@tauri-apps/plugin-global-shortcut`. When the stat
 
 - Each running script owns its own OS thread.
 - Each thread constructs its own `EnigoBackend` inside the thread (enigo is not `Send` on all platforms — see [engine `BackendFactory`](crates/toto-engine/src/runner.rs)).
-- Stop is signalled through an `mpsc::channel::<()>`. `Delay::execute` uses `recv_timeout`, so infinite loops halt within the current delay chunk (typically ≤ the configured delay).
+- Stop is signalled through an `mpsc::channel::<()>`. `Delay::execute` dispatches to one of three sleep strategies based on duration: pure spin-wait (≤ 2 ms, for sub-millisecond precision), a hybrid coarse-sleep + spin-tail (2–20 ms, to absorb OS scheduler overshoot), or plain `recv_timeout` (> 20 ms, CPU-friendly). In all cases the stop signal is checked throughout, so scripts halt promptly.
 - Multiple scripts run fully independently — starting, stopping, or toggling one script never affects the others. This is what enables "different hotkey, different active config, all running simultaneously".
 
 ### Adding a new action type

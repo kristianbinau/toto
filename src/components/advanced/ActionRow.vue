@@ -175,9 +175,10 @@ function currentKeyName(): string {
     <template v-else-if="props.modelValue.type === 'Delay'">
       <UInput
         type="number"
-        :min="10"
+        :min="0.1"
+        :step="0.1"
         :model-value="props.modelValue.ms"
-        @update:model-value="update({ ms: Math.max(10, Number($event) || 10) })"
+        @update:model-value="update({ ms: Math.max(0.1, Number($event) || 0.1) })"
         size="xs"
         placeholder="ms"
       />

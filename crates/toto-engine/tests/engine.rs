@@ -20,7 +20,7 @@ fn shared_mock() -> (MockBackend, impl Fn() -> Result<Box<dyn Backend>, EngineEr
     (observer, factory)
 }
 
-fn click_script(id: &str, repeat: Repeat, delay_ms: u64) -> Script {
+fn click_script(id: &str, repeat: Repeat, delay_ms: f64) -> Script {
     Script {
         id: ScriptId::new(id),
         actions: vec![
@@ -39,7 +39,7 @@ fn runs_bounded_script_to_completion() {
     let (observer, factory) = shared_mock();
     let engine = Engine::new(factory);
 
-    engine.start(click_script("five", Repeat::Times(5), 10)).unwrap();
+    engine.start(click_script("five", Repeat::Times(5), 10.0)).unwrap();
 
     // Wait for completion (5 iterations * ~10ms + slack).
     let deadline = Instant::now() + Duration::from_secs(2);
@@ -63,7 +63,7 @@ fn infinite_script_stops_promptly() {
     let (observer, factory) = shared_mock();
     let engine = Engine::new(factory);
 
-    engine.start(click_script("inf", Repeat::Infinite, 20)).unwrap();
+    engine.start(click_script("inf", Repeat::Infinite, 20.0)).unwrap();
     thread::sleep(Duration::from_millis(120));
 
     let stop_start = Instant::now();
@@ -91,8 +91,8 @@ fn concurrent_scripts_are_independent() {
     let (observer, factory) = shared_mock();
     let engine = Engine::new(factory);
 
-    engine.start(click_script("a", Repeat::Infinite, 20)).unwrap();
-    engine.start(click_script("b", Repeat::Infinite, 20)).unwrap();
+    engine.start(click_script("a", Repeat::Infinite, 20.0)).unwrap();
+    engine.start(click_script("b", Repeat::Infinite, 20.0)).unwrap();
 
     thread::sleep(Duration::from_millis(100));
     assert!(engine.is_running(&ScriptId::new("a")));
@@ -119,8 +119,8 @@ fn starting_running_script_errors() {
     let (_observer, factory) = shared_mock();
     let engine = Engine::new(factory);
 
-    engine.start(click_script("dup", Repeat::Infinite, 20)).unwrap();
-    let err = engine.start(click_script("dup", Repeat::Infinite, 20));
+    engine.start(click_script("dup", Repeat::Infinite, 20.0)).unwrap();
+    let err = engine.start(click_script("dup", Repeat::Infinite, 20.0));
     assert!(matches!(err, Err(EngineError::AlreadyRunning(_))));
     engine.stop(&ScriptId::new("dup")).unwrap();
 }
@@ -130,7 +130,7 @@ fn toggle_flips_state() {
     let (_observer, factory) = shared_mock();
     let engine = Engine::new(factory);
 
-    let s = click_script("tog", Repeat::Infinite, 20);
+    let s = click_script("tog", Repeat::Infinite, 20.0);
     assert!(engine.toggle(s.clone()).unwrap());
     assert!(engine.is_running(&ScriptId::new("tog")));
     assert!(!engine.toggle(s).unwrap());
@@ -139,7 +139,7 @@ fn toggle_flips_state() {
 
 #[test]
 fn script_round_trips_through_json() {
-    let script = click_script("json", Repeat::Times(3), 15);
+    let script = click_script("json", Repeat::Times(3), 15.0);
     let json = serde_json::to_string(&script).unwrap();
     let back: Script = serde_json::from_str(&json).unwrap();
     assert_eq!(back.id, ScriptId::new("json"));

@@ -67,7 +67,7 @@ export function buildSimpleScript(cfg: SimpleConfig): Script {
     repeat: { mode: "Infinite" },
     actions: [
       { type: "Click", button: cfg.button, direction: "Click" },
-      { type: "Delay", ms: Math.max(10, Math.floor(cfg.intervalMs)) },
+      { type: "Delay", ms: Math.max(0.1, cfg.intervalMs) },
     ],
   };
 }

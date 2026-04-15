@@ -19,7 +19,7 @@ function setButton(v: "Left" | "Right") {
 function setInterval(v: number) {
   const n = Number(v);
   if (!Number.isFinite(n)) return;
-  store.simpleConfig.intervalMs = Math.max(10, Math.min(60000, Math.floor(n)));
+  store.simpleConfig.intervalMs = Math.max(0.1, Math.min(60000, n));
 }
 
 function setHotkey(v: string | undefined) {
@@ -68,8 +68,9 @@ async function toggle() {
         <label class="text-xs text-neutral-500 block mb-1">Interval (ms)</label>
         <UInput
           type="number"
-          :min="10"
+          :min="0.1"
           :max="60000"
+          :step="0.1"
           :model-value="store.simpleConfig.intervalMs"
           @update:model-value="setInterval($event as number)"
           size="sm"

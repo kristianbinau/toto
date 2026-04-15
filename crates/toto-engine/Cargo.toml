@@ -19,5 +19,13 @@ thiserror = "2"
 log = "0.4"
 enigo = { version = "0.6.1", optional = true }
 
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Media"] }
+
 [dev-dependencies]
 serde_json = "1"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "sleep_accuracy"
+harness = false
