@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AboutDialog: typeof import('./src/components/common/AboutDialog.vue')['default']
     ActionList: typeof import('./src/components/advanced/ActionList.vue')['default']
     ActionRow: typeof import('./src/components/advanced/ActionRow.vue')['default']
     HotkeyInput: typeof import('./src/components/common/HotkeyInput.vue')['default']
@@ -28,6 +29,7 @@ declare module 'vue' {
     UDropdownMenu: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/DropdownMenu.vue')['default']
     UInput: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Input.vue')['default']
     UKbd: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Kbd.vue')['default']
+    UModal: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Modal.vue')['default']
     USelect: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Select.vue')['default']
   }
 }

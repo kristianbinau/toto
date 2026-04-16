@@ -237,6 +237,17 @@ Global hotkeys are bound via `@tauri-apps/plugin-global-shortcut`. When the stat
 
 Profiles, the simple-mode config, the active mode, and hotkey bindings are persisted via `tauri-plugin-store` — see the [Persistence](#persistence) section above for the schema. The profiles composable in [src/stores/profiles.ts](src/stores/profiles.ts) owns hydration, debounced save, and hotkey reconciliation.
 
+## Platform notes
+
+### Windows
+
+`enigo` cannot deliver synthetic input to windows running at a higher integrity level than toto itself. In practice this means: if a UAC-elevated window is focused, clicks from toto are silently dropped. To drive an elevated target, launch toto elevated too. Running as a standard user is otherwise fine — no UAC prompt is required at startup.
+
+### Linux
+
+- **X11** (including XWayland): `enigo` works out of the box via the XDO backend.
+- **Wayland**: most compositors refuse synthetic input from arbitrary apps for security reasons. Running under XWayland fixes this for apps that accept X11 input. If toto itself is launched on a native Wayland session, export `WINIT_UNIX_BACKEND=x11` before `npm run tauri dev` / the built binary to force the X11 winit backend.
+
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md). Phases 0–3 (scaffolding, engine, Vue UI, persistence) are complete; Phase 4 (system tray) is next.
+See [ROADMAP.md](ROADMAP.md). Phases 0–5 are complete.

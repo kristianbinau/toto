@@ -89,22 +89,21 @@ Persist UI state via `@tauri-apps/plugin-store`; bind per-profile and simple-mod
 
 ## Phase 4 — System Tray
 
-- [ ] Add tray icon using `tauri-plugin-tray` (built into Tauri 2 core, enable in `Cargo.toml` features)
-- [ ] Tray menu items: "Show", "Start/Stop", "Quit"
-- [ ] Tray icon changes when clicking is active (different icon file)
-- [ ] Closing the window hides it (minimise to tray); clicking the tray icon shows it again
-  - Handle the `CloseRequested` window event, call `event.prevent_close()`, then `window.hide()`
+- [x] Add tray icon using Tauri 2 core (`tray-icon` + `image-png` features in `Cargo.toml`; no separate plugin)
+- [x] Tray menu items: "Show", "About", "Quit" (Start/Stop intentionally omitted — running state is managed from the window)
+- [x] Tray icon changes when clicking is active (`tray-idle-32.png` / `tray-active-32.png`, swapped via `set_tray_active` command)
+- [x] Closing the window hides it (minimise to tray); left-clicking the tray icon shows it again
+  - `CloseRequested` handler calls `api.prevent_close()` then `window.hide()`
 
 ---
 
 ## Phase 5 — Polish
 
-- [ ] App icon (replace default Tauri icons in `src-tauri/icons/`)
-- [ ] Keyboard-accessible UI (all inputs reachable via Tab)
-- [ ] Error toasts for failed commands (use NuxtUI `useToast`)
-- [ ] About dialog with version number (read from `tauri.conf.json` via `app.package_info()`)
-- [ ] Windows: test that `enigo` simulation works without UAC issues on standard user accounts
-- [ ] Linux: test under X11 and Wayland (enigo has different backends; may need `WINIT_UNIX_BACKEND=x11`)
+- [x] App icon regenerated from [logo.svg](logo.svg) via `npx @tauri-apps/cli icon logo.svg`
+- [x] Keyboard-accessible UI (all controls use NuxtUI primitives; icon-only buttons have `aria-label`)
+- [x] Error toasts for failed commands via `src/lib/toast.ts` + `useToast` sink wired in [src/App.vue](src/App.vue)
+- [x] About dialog with version number (reads via `@tauri-apps/api/app::getVersion`); opens from both the header info button and the tray "About" menu item
+- [x] Windows / Linux (X11 / Wayland) limitations documented in [README.md](README.md#platform-notes)
 
 ---
 

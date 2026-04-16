@@ -12,6 +12,7 @@ import {
 } from "../lib/types";
 import { totoApi } from "../lib/tauri";
 import { reconcile, unbindAll, type HotkeyHandler } from "../lib/hotkeys";
+import { errorToast } from "../lib/toast";
 
 const STORE_FILE = "toto.json";
 const STATE_KEY = "state";
@@ -45,6 +46,7 @@ let _tauriStore: Store | null = null;
 let _pollTimer: number | null = null;
 let _saveTimer: number | null = null;
 let _lastHotkeyReq = 0;
+let _lastTrayActive: boolean | null = null;
 
 function newProfile(index: number): ProfileEntry {
   return {
@@ -95,7 +97,7 @@ export function useProfilesStore(): StoreShape {
       await _tauriStore.set(STATE_KEY, snapshot);
       await _tauriStore.save();
     } catch (err) {
-      console.error("failed to persist state", err);
+      errorToast("Failed to save settings", err);
     }
   }
 
@@ -119,7 +121,7 @@ export function useProfilesStore(): StoreShape {
       await reconcile(desired);
     } catch (err) {
       if (req === _lastHotkeyReq) {
-        console.error("hotkey reconcile failed", err);
+        errorToast("Hotkey registration failed", err);
       }
     }
   }
@@ -130,7 +132,13 @@ export function useProfilesStore(): StoreShape {
       runningIds.clear();
       for (const id of ids) runningIds.add(id);
     } catch (err) {
-      console.error("failed to poll running scripts", err);
+      errorToast("Failed to read running scripts", err);
+      return;
+    }
+    const active = runningIds.size > 0;
+    if (active !== _lastTrayActive) {
+      _lastTrayActive = active;
+      void totoApi.setTrayActive(active).catch(() => {});
     }
   }
 
@@ -229,12 +237,20 @@ export function useProfilesStore(): StoreShape {
     },
 
     async toggleScript(script: Script) {
-      await totoApi.toggleScript(script);
+      try {
+        await totoApi.toggleScript(script);
+      } catch (err) {
+        errorToast("Failed to toggle script", err);
+      }
       await refreshRunning();
     },
 
     async stopAll() {
-      await totoApi.stopAll();
+      try {
+        await totoApi.stopAll();
+      } catch (err) {
+        errorToast("Failed to stop scripts", err);
+      }
       await refreshRunning();
     },
 

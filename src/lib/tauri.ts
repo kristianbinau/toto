@@ -8,4 +8,5 @@ export const totoApi = {
   isRunning: (id: string) => invoke<boolean>("is_running", { id }),
   runningScripts: () => invoke<string[]>("running_scripts"),
   stopAll: () => invoke<void>("stop_all"),
+  setTrayActive: (active: boolean) => invoke<void>("set_tray_active", { active }),
 };
