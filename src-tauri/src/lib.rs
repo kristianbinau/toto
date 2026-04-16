@@ -27,10 +27,7 @@ pub fn run() {
             let about_item = MenuItem::with_id(app, "about", "About", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let separator = PredefinedMenuItem::separator(app)?;
-            let menu = Menu::with_items(
-                app,
-                &[&show_item, &about_item, &separator, &quit_item],
-            )?;
+            let menu = Menu::with_items(app, &[&show_item, &about_item, &separator, &quit_item])?;
 
             let idle_icon = Image::from_bytes(include_bytes!("../icons/tray-idle-32.png"))?;
 
