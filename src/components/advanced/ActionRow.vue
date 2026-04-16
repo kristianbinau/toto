@@ -40,10 +40,7 @@ function update(patch: Partial<Action>) {
 }
 
 function setKey(name: string) {
-  const key: Key =
-    name === "Unicode"
-      ? { name: "Unicode", value: "a" }
-      : ({ name } as Key);
+  const key: Key = name === "Unicode" ? { name: "Unicode", value: "a" } : ({ name } as Key);
   if (props.modelValue.type !== "Key") return;
   emit("update:modelValue", { ...props.modelValue, key });
 }

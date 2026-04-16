@@ -21,10 +21,7 @@ export type Action =
 
 export type ActionKind = Action["type"];
 
-export type Repeat =
-  | { mode: "Once" }
-  | { mode: "Times"; count: number }
-  | { mode: "Infinite" };
+export type Repeat = { mode: "Once" } | { mode: "Times"; count: number } | { mode: "Infinite" };
 
 export type Script = {
   id: string;

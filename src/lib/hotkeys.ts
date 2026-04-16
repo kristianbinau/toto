@@ -1,8 +1,4 @@
-import {
-  register,
-  unregister,
-  unregisterAll,
-} from "@tauri-apps/plugin-global-shortcut";
+import { register, unregister, unregisterAll } from "@tauri-apps/plugin-global-shortcut";
 
 export type HotkeyHandler = () => void;
 
@@ -31,9 +27,7 @@ export async function unbindAll(): Promise<void> {
 }
 
 /** Reconcile the set of registered accelerators with a desired map. */
-export async function reconcile(
-  desired: Map<string, HotkeyHandler>,
-): Promise<void> {
+export async function reconcile(desired: Map<string, HotkeyHandler>): Promise<void> {
   for (const accel of Array.from(active.keys())) {
     if (!desired.has(accel)) await unbindHotkey(accel);
   }

@@ -8,15 +8,15 @@ A fast, lightweight autoclicker / macro runner built with **Tauri 2** (Rust back
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| UI Framework | Vue 3 + TypeScript |
-| Component Library | [NuxtUI for Vue](https://ui.nuxt.com/docs/getting-started/installation/vue) (Tailwind-based) |
-| Build Tool | Vite 6 |
-| Desktop Shell | Tauri 2 |
-| Input Simulation | [enigo 0.6.1](https://docs.rs/enigo/0.6.1/enigo/) |
-| Settings Persistence | [tauri-plugin-store](https://v2.tauri.app/plugin/store/) |
-| Global Hotkeys | [tauri-plugin-global-shortcut](https://v2.tauri.app/plugin/global-shortcut/) |
+| Layer                | Technology                                                                                   |
+| -------------------- | -------------------------------------------------------------------------------------------- |
+| UI Framework         | Vue 3 + TypeScript                                                                           |
+| Component Library    | [NuxtUI for Vue](https://ui.nuxt.com/docs/getting-started/installation/vue) (Tailwind-based) |
+| Build Tool           | Vite 6                                                                                       |
+| Desktop Shell        | Tauri 2                                                                                      |
+| Input Simulation     | [enigo 0.6.1](https://docs.rs/enigo/0.6.1/enigo/)                                            |
+| Settings Persistence | [tauri-plugin-store](https://v2.tauri.app/plugin/store/)                                     |
+| Global Hotkeys       | [tauri-plugin-global-shortcut](https://v2.tauri.app/plugin/global-shortcut/)                 |
 
 ## Repository Layout
 
@@ -105,14 +105,14 @@ cargo bench -p toto-engine
 
 Runs `benches/sleep_accuracy.rs` via Criterion and measures actual sleep duration at 0.1, 0.5, 1, 2, 5, 10, 20, and 50 ms. HTML reports are written to `target/criterion/`. Use this to verify the spin-wait and hybrid thresholds on your hardware — expected ranges on a typical Windows machine:
 
-| Target | Acceptable range | Strategy |
-|--------|-----------------|----------|
-| 0.1 ms | 0.05 – 0.5 ms  | spin     |
-| 0.5 ms | 0.4 – 1.0 ms   | spin     |
-| 1.0 ms | 0.9 – 1.5 ms   | spin     |
-| 5.0 ms | 4.5 – 6.5 ms   | hybrid   |
-| 10.0 ms | 9.0 – 12.0 ms | hybrid   |
-| 50.0 ms | 48 – 53 ms    | recv_timeout |
+| Target  | Acceptable range | Strategy     |
+| ------- | ---------------- | ------------ |
+| 0.1 ms  | 0.05 – 0.5 ms    | spin         |
+| 0.5 ms  | 0.4 – 1.0 ms     | spin         |
+| 1.0 ms  | 0.9 – 1.5 ms     | spin         |
+| 5.0 ms  | 4.5 – 6.5 ms     | hybrid       |
+| 10.0 ms | 9.0 – 12.0 ms    | hybrid       |
+| 50.0 ms | 48 – 53 ms       | recv_timeout |
 
 Sub-2 ms delays consume one CPU core while spinning; this is intentional and expected.
 
@@ -120,14 +120,14 @@ Sub-2 ms delays consume one CPU core while spinning; this is intentional and exp
 
 The backend exposes these commands via `@tauri-apps/api/core`'s `invoke(...)`. All payload types are `Serialize`/`Deserialize` on the engine types, so they cross the boundary directly.
 
-| Command | Args | Returns | Purpose |
-|---|---|---|---|
-| `start_script` | `{ script: Script }` | `Result<(), string>` | Start a script. Errors if already running. |
-| `stop_script` | `{ id: string }` | `Result<(), string>` | Stop a running script by id. |
-| `toggle_script` | `{ script: Script }` | `Result<boolean, string>` | Start if not running, stop if running. Returns new active state. |
-| `is_running` | `{ id: string }` | `boolean` | Whether a script with that id is currently active. |
-| `running_scripts` | — | `string[]` | Ids of all currently active scripts. |
-| `stop_all` | — | `void` | Stop every running script. |
+| Command           | Args                 | Returns                   | Purpose                                                          |
+| ----------------- | -------------------- | ------------------------- | ---------------------------------------------------------------- |
+| `start_script`    | `{ script: Script }` | `Result<(), string>`      | Start a script. Errors if already running.                       |
+| `stop_script`     | `{ id: string }`     | `Result<(), string>`      | Stop a running script by id.                                     |
+| `toggle_script`   | `{ script: Script }` | `Result<boolean, string>` | Start if not running, stop if running. Returns new active state. |
+| `is_running`      | `{ id: string }`     | `boolean`                 | Whether a script with that id is currently active.               |
+| `running_scripts` | —                    | `string[]`                | Ids of all currently active scripts.                             |
+| `stop_all`        | —                    | `void`                    | Stop every running script.                                       |
 
 `Script` JSON shape:
 
@@ -135,14 +135,24 @@ The backend exposes these commands via `@tauri-apps/api/core`'s `invoke(...)`. A
 type Script = {
   id: string;
   actions: Action[];
-  repeat?: { mode: "Once" } | { mode: "Times", count: number } | { mode: "Infinite" };
+  repeat?: { mode: "Once" } | { mode: "Times"; count: number } | { mode: "Infinite" };
 };
 
 type Action =
-  | { type: "Click", button: "Left" | "Right" | "Middle", direction: "Press" | "Release" | "Click" }
-  | { type: "Key", key: { name: "Unicode", value: string } | { name: "Return" } | { name: "Tab" } | { name: "Space" } | { name: "Escape" } | { name: "Backspace" }, direction: "Press" | "Release" | "Click" }
-  | { type: "Move", x: number, y: number, coord: "Absolute" | "Relative" }
-  | { type: "Delay", ms: number };   // fractional ms supported (e.g. 0.5 = 500 µs); minimum 0.1 enforced by the UI
+  | { type: "Click"; button: "Left" | "Right" | "Middle"; direction: "Press" | "Release" | "Click" }
+  | {
+      type: "Key";
+      key:
+        | { name: "Unicode"; value: string }
+        | { name: "Return" }
+        | { name: "Tab" }
+        | { name: "Space" }
+        | { name: "Escape" }
+        | { name: "Backspace" };
+      direction: "Press" | "Release" | "Click";
+    }
+  | { type: "Move"; x: number; y: number; coord: "Absolute" | "Relative" }
+  | { type: "Delay"; ms: number }; // fractional ms supported (e.g. 0.5 = 500 µs); minimum 0.1 enforced by the UI
 ```
 
 Example from the devtools console:
@@ -153,8 +163,8 @@ const script = {
   repeat: { mode: "Times", count: 5 },
   actions: [
     { type: "Click", button: "Left", direction: "Click" },
-    { type: "Delay", ms: 200 }
-  ]
+    { type: "Delay", ms: 200 },
+  ],
 };
 await window.__TAURI__.core.invoke("start_script", { script });
 ```
@@ -207,8 +217,8 @@ type PersistedState = {
   activeMode: "simple" | "advanced";
   simpleConfig: { button: "Left" | "Right"; intervalMs: number; hotkey?: string };
   profiles: Array<{
-    script: Script;     // same shape as the tauri command payload
-    hotkey?: string;    // e.g. "CmdOrCtrl+Shift+1"
+    script: Script; // same shape as the tauri command payload
+    hotkey?: string; // e.g. "CmdOrCtrl+Shift+1"
   }>;
 };
 ```

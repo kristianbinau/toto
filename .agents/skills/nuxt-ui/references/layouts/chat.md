@@ -21,35 +21,35 @@ pnpm add ai @ai-sdk/gateway @ai-sdk/vue
 Using [Vercel AI Gateway](https://vercel.com/ai-gateway) (recommended):
 
 ```ts [server/api/chat.post.ts]
-import { streamText, convertToModelMessages } from 'ai'
-import { gateway } from '@ai-sdk/gateway'
+import { streamText, convertToModelMessages } from "ai";
+import { gateway } from "@ai-sdk/gateway";
 
 export default defineEventHandler(async (event) => {
-  const { messages } = await readBody(event)
+  const { messages } = await readBody(event);
 
   return streamText({
-    model: gateway('anthropic/claude-sonnet-4.6'),
-    system: 'You are a helpful assistant.',
-    messages: await convertToModelMessages(messages)
-  }).toUIMessageStreamResponse()
-})
+    model: gateway("anthropic/claude-sonnet-4.6"),
+    system: "You are a helpful assistant.",
+    messages: await convertToModelMessages(messages),
+  }).toUIMessageStreamResponse();
+});
 ```
 
 Or with a direct provider (e.g., `pnpm add @ai-sdk/openai`):
 
 ```ts [server/api/chat.post.ts]
-import { streamText, convertToModelMessages } from 'ai'
-import { openai } from '@ai-sdk/openai'
+import { streamText, convertToModelMessages } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 export default defineEventHandler(async (event) => {
-  const { messages } = await readBody(event)
+  const { messages } = await readBody(event);
 
   return streamText({
-    model: openai('gpt-4o'),
-    system: 'You are a helpful assistant.',
-    messages: await convertToModelMessages(messages)
-  }).toUIMessageStreamResponse()
-})
+    model: openai("gpt-4o"),
+    system: "You are a helpful assistant.",
+    messages: await convertToModelMessages(messages),
+  }).toUIMessageStreamResponse();
+});
 ```
 
 ## Component tree
@@ -68,24 +68,24 @@ UDashboardPanel
 
 ```vue [pages/chat/[id].vue]
 <script setup lang="ts">
-import { isReasoningUIPart, isTextUIPart, isToolUIPart, getToolName } from 'ai'
-import { Chat } from '@ai-sdk/vue'
-import { isPartStreaming, isToolStreaming } from '@nuxt/ui/utils/ai'
+import { isReasoningUIPart, isTextUIPart, isToolUIPart, getToolName } from "ai";
+import { Chat } from "@ai-sdk/vue";
+import { isPartStreaming, isToolStreaming } from "@nuxt/ui/utils/ai";
 
-definePageMeta({ layout: 'dashboard' })
+definePageMeta({ layout: "dashboard" });
 
-const input = ref('')
+const input = ref("");
 
 const chat = new Chat({
   onError(error) {
-    console.error(error)
-  }
-})
+    console.error(error);
+  },
+});
 
 function onSubmit() {
-  if (!input.value.trim()) return
-  chat.sendMessage({ text: input.value })
-  input.value = ''
+  if (!input.value.trim()) return;
+  chat.sendMessage({ text: input.value });
+  input.value = "";
 }
 </script>
 
@@ -99,7 +99,10 @@ function onSubmit() {
       <UContainer>
         <UChatMessages :messages="chat.messages" :status="chat.status">
           <template #content="{ message }">
-            <template v-for="(part, index) in message.parts" :key="`${message.id}-${part.type}-${index}`">
+            <template
+              v-for="(part, index) in message.parts"
+              :key="`${message.id}-${part.type}-${index}`"
+            >
               <UChatReasoning
                 v-if="isReasoningUIPart(part)"
                 :text="part.text"
@@ -138,7 +141,11 @@ function onSubmit() {
     <template #footer>
       <UContainer class="pb-4 sm:pb-6">
         <UChatPrompt v-model="input" :error="chat.error" @submit="onSubmit">
-          <UChatPromptSubmit :status="chat.status" @stop="chat.stop()" @reload="chat.regenerate()" />
+          <UChatPromptSubmit
+            :status="chat.status"
+            @stop="chat.stop()"
+            @reload="chat.regenerate()"
+          />
         </UChatPrompt>
       </UContainer>
     </template>

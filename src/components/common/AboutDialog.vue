@@ -27,12 +27,10 @@ onMounted(async () => {
   >
     <template #body>
       <div class="flex flex-col gap-3 text-sm text-neutral-600 dark:text-neutral-300">
-        <p>
-          A small autoclicker built with Tauri, Vue, and a custom Rust engine.
-        </p>
+        <p>A small autoclicker built with Tauri, Vue, and a custom Rust engine.</p>
         <p class="text-xs text-neutral-500">
-          Simple mode for one-button clicking. Advanced mode for multi-action
-          scripts with per-profile hotkeys.
+          Simple mode for one-button clicking. Advanced mode for multi-action scripts with
+          per-profile hotkeys.
         </p>
       </div>
     </template>

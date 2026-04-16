@@ -79,10 +79,7 @@ async function toggle() {
 
       <div>
         <label class="text-xs text-neutral-500 block mb-1">Toggle hotkey</label>
-        <HotkeyInput
-          :model-value="store.simpleConfig.hotkey"
-          @update:model-value="setHotkey"
-        />
+        <HotkeyInput :model-value="store.simpleConfig.hotkey" @update:model-value="setHotkey" />
       </div>
 
       <UButton

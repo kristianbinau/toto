@@ -68,37 +68,23 @@ function save() {
 
       <div>
         <label class="text-xs text-neutral-500 block mb-1">Repeat</label>
-        <RepeatEditor
-          :model-value="draft.script.repeat"
-          @update:model-value="setRepeat"
-        />
+        <RepeatEditor :model-value="draft.script.repeat" @update:model-value="setRepeat" />
       </div>
 
       <div>
         <label class="text-xs text-neutral-500 block mb-1">Hotkey</label>
-        <HotkeyInput
-          :model-value="draft.hotkey"
-          @update:model-value="setHotkey"
-        />
+        <HotkeyInput :model-value="draft.hotkey" @update:model-value="setHotkey" />
       </div>
 
       <div>
         <label class="text-xs text-neutral-500 block mb-1">Actions</label>
-        <ActionList
-          :model-value="draft.script.actions"
-          @update:model-value="setActions"
-        />
+        <ActionList :model-value="draft.script.actions" @update:model-value="setActions" />
       </div>
     </div>
 
     <template #footer>
       <div class="flex gap-2 justify-end">
-        <UButton
-          size="sm"
-          color="neutral"
-          variant="ghost"
-          @click="emit('cancel')"
-        >
+        <UButton size="sm" color="neutral" variant="ghost" @click="emit('cancel')">
           Cancel
         </UButton>
         <UButton size="sm" color="primary" @click="save">Save</UButton>

@@ -35,11 +35,7 @@ async function remove(i: number) {
 <template>
   <div class="flex flex-col gap-2">
     <template v-if="editingIndex !== null && store.profiles[editingIndex]">
-      <ProfileEditor
-        :entry="store.profiles[editingIndex]!"
-        @save="save"
-        @cancel="cancel"
-      />
+      <ProfileEditor :entry="store.profiles[editingIndex]!" @save="save" @cancel="cancel" />
     </template>
     <template v-else>
       <ProfileCard

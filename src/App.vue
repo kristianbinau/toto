@@ -55,15 +55,12 @@ onBeforeUnmount(() => {
           @click="aboutOpen = true"
         />
         <div class="flex-1" />
-        <UBadge
-          v-if="runningCount > 0"
-          color="success"
-          variant="solid"
-          size="sm"
-        >
+        <UBadge v-if="runningCount > 0" color="success" variant="solid" size="sm">
           {{ runningCount }} running
         </UBadge>
-        <div class="inline-flex rounded-md overflow-hidden border border-neutral-300 dark:border-neutral-700">
+        <div
+          class="inline-flex rounded-md overflow-hidden border border-neutral-300 dark:border-neutral-700"
+        >
           <UButton
             size="xs"
             :color="isSimple ? 'primary' : 'neutral'"

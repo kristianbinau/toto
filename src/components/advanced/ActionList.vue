@@ -60,13 +60,7 @@ const addItems = [
       No actions yet.
     </p>
     <UDropdownMenu :items="addItems">
-      <UButton
-        block
-        size="xs"
-        color="neutral"
-        variant="outline"
-        icon="i-lucide-plus"
-      >
+      <UButton block size="xs" color="neutral" variant="outline" icon="i-lucide-plus">
         Add action
       </UButton>
     </UDropdownMenu>
