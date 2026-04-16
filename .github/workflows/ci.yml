@@ -20,12 +20,8 @@ jobs:
     name: Frontend (type-check + build)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          cache: npm
+      - uses: actions/checkout@v6
+      - uses: jdx/mise-action@v3
 
       - run: npm ci
 
@@ -39,7 +35,8 @@ jobs:
     name: Rust lint (fmt + clippy)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: jdx/mise-action@v3
 
       - name: Install Linux system dependencies
         run: |
@@ -51,8 +48,8 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: Run sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+      #- name: Run sccache
+      #  uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
@@ -68,7 +65,8 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: jdx/mise-action@v3
 
       - name: Install Linux system dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -79,8 +77,8 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Run sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+      #- name: Run sccache
+      #  uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Install cargo-nextest
         uses: taiki-e/install-action@cargo-nextest
@@ -100,7 +98,8 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: jdx/mise-action@v3
 
       - name: Install Linux system dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -108,16 +107,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          cache: npm
-
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Run sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+      #- name: Run sccache
+      #  uses: mozilla-actions/sccache-action@v0.0.9
 
       - run: npm ci
 
