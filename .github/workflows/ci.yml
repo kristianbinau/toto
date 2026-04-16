@@ -29,6 +29,10 @@ jobs:
 
       - run: npm ci
 
+      - run: npm run lint:check
+
+      - run: npm run fmt:check
+
       - run: npm run build
 
   rust-lint:
