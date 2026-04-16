@@ -52,7 +52,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Run sccache
-        uses: mozilla-actions/sccache-action@v0.0.7
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
@@ -80,7 +80,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Run sccache
-        uses: mozilla-actions/sccache-action@v0.0.7
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Install cargo-nextest
         uses: taiki-e/install-action@cargo-nextest
