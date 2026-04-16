@@ -6,12 +6,17 @@
     "src-tauri": {
       "component": "toto",
       "extra-files": [
-        { "type": "json", "path": "tauri.conf.json", "jsonpath": "$.version" },
-        { "type": "json", "path": "../package.json", "jsonpath": "$.version" }
+        { "type": "json", "path": "tauri.conf.json", "jsonpath": "$.version" }
       ]
     },
     "crates/toto-engine": {
       "component": "toto-engine"
+    },
+    ".": {
+      "release-type": "node",
+      "component": "toto-root",
+      "skip-github-release": true,
+      "skip-github-changelog": true
     }
   },
   "plugins": [
@@ -19,7 +24,7 @@
     {
       "type": "linked-versions",
       "groupName": "toto",
-      "components": ["toto", "toto-engine"],
+      "components": ["toto", "toto-engine", "toto-root"],
       "merge": true
     }
   ],

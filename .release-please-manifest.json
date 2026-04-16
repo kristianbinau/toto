@@ -1,4 +1,5 @@
 {
   "src-tauri": "0.1.0",
-  "crates/toto-engine": "0.1.0"
+  "crates/toto-engine": "0.1.0",
+  ".": "0.1.0"
 }
