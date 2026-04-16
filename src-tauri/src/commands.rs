@@ -45,7 +45,11 @@ pub fn set_tray_active(app: AppHandle, active: bool) -> Result<(), String> {
     let tray = app
         .tray_by_id(TRAY_ID)
         .ok_or_else(|| "tray icon not found".to_string())?;
-    let bytes = if active { TRAY_ACTIVE_PNG } else { TRAY_IDLE_PNG };
+    let bytes = if active {
+        TRAY_ACTIVE_PNG
+    } else {
+        TRAY_IDLE_PNG
+    };
     let icon = Image::from_bytes(bytes).map_err(|e| e.to_string())?;
     tray.set_icon(Some(icon)).map_err(|e| e.to_string())
 }

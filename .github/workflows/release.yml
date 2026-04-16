@@ -16,15 +16,16 @@ jobs:
     name: release-please
     runs-on: ubuntu-latest
     outputs:
-      release_created: ${{ steps.release.outputs['.--release_created'] }}
-      tag_name: ${{ steps.release.outputs['.--tag_name'] }}
-      release_id: ${{ steps.release.outputs['.--id'] }}
+      release_created: ${{ steps.release.outputs.releases_created }}
+      tag_name: ${{ steps.release.outputs['src-tauri--tag_name'] }}
+      release_id: ${{ steps.release.outputs['src-tauri--id'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
   publish-tauri:
     name: Publish Tauri (${{ matrix.platform }} ${{ matrix.args }})
@@ -50,18 +51,14 @@ jobs:
             rust-targets: ""
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: jdx/mise-action@v4
 
       - name: Install Linux system dependencies
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          cache: npm
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -70,13 +67,13 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: ". -> target"
-          shared-key: release-${{ matrix.platform }}-${{ matrix.rust-targets }}
+          workspaces: "src-tauri -> target"
+          key: ${{ matrix.platform }}-${{ matrix.rust-targets }}
 
       - run: npm ci
 
       - name: Build and upload Tauri bundles
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v0.5.22
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
