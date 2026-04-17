@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import type { Repeat } from "../../lib/types";
 
 const props = defineProps<{ modelValue: Repeat }>();
@@ -20,10 +21,13 @@ function setMode(mode: string) {
   }
 }
 
-function setCount(v: number) {
-  const n = Math.max(1, Math.floor(Number(v) || 1));
-  emit("update:modelValue", { mode: "Times", count: n });
-}
+const count = computed({
+  get: () => (props.modelValue.mode === "Times" ? props.modelValue.count : 1),
+  set: (v: number) => {
+    const n = Math.max(1, Math.floor(Number(v) || 1));
+    emit("update:modelValue", { mode: "Times", count: n });
+  },
+});
 </script>
 
 <template>
@@ -32,17 +36,15 @@ function setCount(v: number) {
       :items="modeItems"
       :model-value="props.modelValue.mode"
       @update:model-value="setMode($event as string)"
-      size="xs"
+      size="sm"
       class="flex-1"
     />
-    <UInput
+    <UInputNumber
       v-if="props.modelValue.mode === 'Times'"
-      type="number"
+      v-model="count"
       :min="1"
-      :model-value="props.modelValue.count"
-      @update:model-value="setCount($event as number)"
-      size="xs"
-      class="w-20"
+      size="sm"
+      class="w-24"
     />
   </div>
 </template>

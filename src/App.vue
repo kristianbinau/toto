@@ -4,22 +4,16 @@ import { useToast } from "@nuxt/ui/composables/useToast";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { useProfilesStore } from "./stores/profiles";
 import { setToastSink } from "./lib/toast";
-import SimpleMode from "./components/SimpleMode.vue";
 import ProfileList from "./components/advanced/ProfileList.vue";
 import AboutDialog from "./components/common/AboutDialog.vue";
 
 const store = useProfilesStore();
 const toast = useToast();
 
-const isSimple = computed(() => store.activeMode === "simple");
 const runningCount = computed(() => store.runningIds.size);
 const aboutOpen = ref(false);
 
 let unlistenAbout: UnlistenFn | null = null;
-
-function setMode(mode: "simple" | "advanced") {
-  store.setActiveMode(mode);
-}
 
 onMounted(async () => {
   setToastSink((opts) => toast.add(opts));
@@ -58,33 +52,21 @@ onBeforeUnmount(() => {
         <UBadge v-if="runningCount > 0" color="success" variant="solid" size="sm">
           {{ runningCount }} running
         </UBadge>
-        <div
-          class="inline-flex rounded-md overflow-hidden border border-neutral-300 dark:border-neutral-700"
+        <UButton
+          v-if="runningCount > 0"
+          size="xs"
+          color="error"
+          variant="soft"
+          icon="i-lucide-square"
+          aria-label="Stop all"
+          @click="store.stopAll()"
         >
-          <UButton
-            size="xs"
-            :color="isSimple ? 'primary' : 'neutral'"
-            :variant="isSimple ? 'solid' : 'ghost'"
-            class="rounded-none"
-            @click="setMode('simple')"
-          >
-            Simple
-          </UButton>
-          <UButton
-            size="xs"
-            :color="!isSimple ? 'primary' : 'neutral'"
-            :variant="!isSimple ? 'solid' : 'ghost'"
-            class="rounded-none"
-            @click="setMode('advanced')"
-          >
-            Advanced
-          </UButton>
-        </div>
+          Stop all
+        </UButton>
       </header>
 
       <main class="flex-1 overflow-y-auto p-3">
-        <SimpleMode v-if="isSimple" />
-        <ProfileList v-else />
+        <ProfileList />
       </main>
 
       <AboutDialog v-model:open="aboutOpen" />

@@ -4,27 +4,35 @@ import type { ProfileEntry } from "../../lib/types";
 import { useProfilesStore } from "../../stores/profiles";
 import ProfileCard from "./ProfileCard.vue";
 import ProfileEditor from "./ProfileEditor.vue";
+import QuickClickCard from "../QuickClickCard.vue";
+import QuickEditor from "../QuickEditor.vue";
+
+type EditTarget = { kind: "quick" } | { kind: "profile"; index: number };
 
 const store = useProfilesStore();
-const editingIndex = ref<number | null>(null);
+const editing = ref<EditTarget | null>(null);
 
-function beginEdit(i: number) {
-  editingIndex.value = i;
+function beginEditProfile(i: number) {
+  editing.value = { kind: "profile", index: i };
+}
+
+function beginEditQuick() {
+  editing.value = { kind: "quick" };
 }
 
 function save(entry: ProfileEntry) {
-  if (editingIndex.value === null) return;
-  store.updateProfile(editingIndex.value, entry);
-  editingIndex.value = null;
+  if (editing.value?.kind !== "profile") return;
+  store.updateProfile(editing.value.index, entry);
+  editing.value = null;
 }
 
-function cancel() {
-  editingIndex.value = null;
+function back() {
+  editing.value = null;
 }
 
 function create() {
   store.addProfile();
-  editingIndex.value = store.profiles.length - 1;
+  editing.value = { kind: "profile", index: store.profiles.length - 1 };
 }
 
 async function remove(i: number) {
@@ -34,25 +42,28 @@ async function remove(i: number) {
 
 <template>
   <div class="flex flex-col gap-2">
-    <template v-if="editingIndex !== null && store.profiles[editingIndex]">
-      <ProfileEditor :entry="store.profiles[editingIndex]!" @save="save" @cancel="cancel" />
+    <template v-if="editing?.kind === 'quick'">
+      <QuickEditor @back="back" />
+    </template>
+    <template v-else-if="editing?.kind === 'profile' && store.profiles[editing.index]">
+      <ProfileEditor :entry="store.profiles[editing.index]!" @save="save" @cancel="back" />
     </template>
     <template v-else>
+      <QuickClickCard @edit="beginEditQuick" />
+      <USeparator
+        v-if="store.profiles.length > 0"
+        :label="store.profiles.length === 1 ? '1 profile' : `${store.profiles.length} profiles`"
+        :ui="{ label: 'text-[10px] text-neutral-500' }"
+      />
       <ProfileCard
         v-for="(entry, i) in store.profiles"
         :key="`${entry.script.id}-${i}`"
         :entry="entry"
         :index="i"
-        @edit="beginEdit(i)"
+        @edit="beginEditProfile(i)"
         @duplicate="store.duplicateProfile(i)"
         @delete="remove(i)"
       />
-      <p
-        v-if="store.profiles.length === 0"
-        class="text-xs text-neutral-500 italic text-center py-2"
-      >
-        No profiles yet. Create one below.
-      </p>
       <UButton
         block
         size="sm"
@@ -62,17 +73,6 @@ async function remove(i: number) {
         @click="create"
       >
         New profile
-      </UButton>
-      <UButton
-        v-if="store.runningIds.size > 0"
-        block
-        size="sm"
-        color="error"
-        variant="soft"
-        icon="i-lucide-square"
-        @click="store.stopAll()"
-      >
-        Stop all ({{ store.runningIds.size }})
       </UButton>
     </template>
   </div>

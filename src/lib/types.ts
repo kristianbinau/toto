@@ -33,12 +33,16 @@ export type SimpleConfig = {
   button: "Left" | "Right";
   intervalMs: number;
   hotkey?: string;
+  armDelayMs?: number;
 };
 
 export type ProfileEntry = {
   script: Script;
   hotkey?: string;
+  armDelayMs?: number;
 };
+
+export const DEFAULT_ARM_DELAY_MS = 3000;
 
 export type AppMode = "simple" | "advanced";
 
@@ -54,7 +58,7 @@ export const SIMPLE_SCRIPT_ID = "__simple__";
 export const DEFAULT_STATE: PersistedState = {
   version: 1,
   activeMode: "simple",
-  simpleConfig: { button: "Left", intervalMs: 100 },
+  simpleConfig: { button: "Left", intervalMs: 100, armDelayMs: DEFAULT_ARM_DELAY_MS },
   profiles: [],
 };
 
