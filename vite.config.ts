@@ -12,8 +12,8 @@ export default defineConfig(async () => ({
     ui({
       ui: {
         colors: {
-          primary: "blue",
-          neutral: "slate",
+          primary: "violet",
+          neutral: "neutral",
         },
       },
     }),
