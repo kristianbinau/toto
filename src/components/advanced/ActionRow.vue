@@ -171,7 +171,7 @@ const moveY = computed({
     </template>
 
     <template v-else-if="props.modelValue.type === 'Delay'">
-      <UInputNumber v-model="delayMs" :min="0.1" :step="10" size="xs" placeholder="ms" />
+      <UInputNumber v-model="delayMs" size="xs" placeholder="ms" />
     </template>
   </div>
 </template>

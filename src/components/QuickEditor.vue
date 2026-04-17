@@ -68,14 +68,7 @@ const hotkey = computed({
       </UFormField>
 
       <UFormField label="Interval" help="Milliseconds between clicks" size="sm">
-        <UInputNumber
-          v-model="intervalMs"
-          :min="0.1"
-          :max="60000"
-          :step="1"
-          size="sm"
-          class="w-full"
-        />
+        <UInputNumber v-model="intervalMs" size="sm" class="w-full" />
       </UFormField>
 
       <UFormField label="Toggle hotkey" size="sm">
