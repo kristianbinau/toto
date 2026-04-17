@@ -257,7 +257,3 @@ Profiles, the simple-mode config, the active mode, and hotkey bindings are persi
 
 - **X11** (including XWayland): `enigo` works out of the box via the XDO backend.
 - **Wayland**: most compositors refuse synthetic input from arbitrary apps for security reasons. Running under XWayland fixes this for apps that accept X11 input. If toto itself is launched on a native Wayland session, export `WINIT_UNIX_BACKEND=x11` before `npm run tauri dev` / the built binary to force the X11 winit backend.
-
-## Roadmap
-
-See [ROADMAP.md](ROADMAP.md). Phases 0–5 are complete.
