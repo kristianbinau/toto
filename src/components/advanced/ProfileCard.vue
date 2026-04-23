@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { ProfileEntry } from "../../lib/types";
-import { DEFAULT_ARM_DELAY_MS, summarizeScript } from "../../lib/types";
+import { summarizeScript } from "../../lib/types";
 import { useProfilesStore } from "../../stores/profiles";
 import ArmedStartButton from "../common/ArmedStartButton.vue";
 import HotkeyDisplay from "../common/HotkeyDisplay.vue";
@@ -15,9 +15,6 @@ defineEmits<{
 
 const store = useProfilesStore();
 const summary = computed(() => summarizeScript(props.entry.script));
-const delayMs = computed(
-  () => props.entry.armDelayMs ?? store.simpleConfig.armDelayMs ?? DEFAULT_ARM_DELAY_MS,
-);
 </script>
 
 <template>
@@ -31,7 +28,7 @@ const delayMs = computed(
         </div>
       </div>
       <div class="flex items-center gap-0.5 shrink-0">
-        <ArmedStartButton :script="props.entry.script" :delay-ms="delayMs" size="xs" />
+        <ArmedStartButton :script="props.entry.script" size="xs" />
         <UButton
           size="xs"
           color="neutral"

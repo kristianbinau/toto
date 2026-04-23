@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import type { ProfileEntry, Action, Repeat } from "../../lib/types";
-import { DEFAULT_ARM_DELAY_MS } from "../../lib/types";
 import ActionList from "./ActionList.vue";
 import RepeatEditor from "./RepeatEditor.vue";
 import HotkeyInput from "../common/HotkeyInput.vue";
@@ -43,14 +42,6 @@ const hotkey = computed({
   },
 });
 
-const armDelayMs = computed({
-  get: () => draft.value.armDelayMs ?? DEFAULT_ARM_DELAY_MS,
-  set: (v: number) => {
-    const n = Number(v);
-    draft.value.armDelayMs = Math.max(0, Math.min(10_000, Number.isFinite(n) ? n : 0));
-  },
-});
-
 function save() {
   emit("save", JSON.parse(JSON.stringify(draft.value)));
 }
@@ -83,21 +74,6 @@ function save() {
 
       <UFormField label="Hotkey" size="sm">
         <HotkeyInput v-model="hotkey" />
-      </UFormField>
-
-      <UFormField
-        label="Activation delay"
-        help="Countdown before the script actually starts."
-        size="sm"
-      >
-        <UInputNumber
-          v-model="armDelayMs"
-          :min="0"
-          :max="10000"
-          :step="500"
-          size="sm"
-          class="w-full"
-        />
       </UFormField>
 
       <UFormField label="Actions" size="sm">

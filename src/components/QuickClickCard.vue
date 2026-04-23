@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { DEFAULT_ARM_DELAY_MS } from "../lib/types";
 import { useProfilesStore } from "../stores/profiles";
 import ArmedStartButton from "./common/ArmedStartButton.vue";
 import HotkeyDisplay from "./common/HotkeyDisplay.vue";
@@ -14,7 +13,6 @@ const summary = computed(() => {
   const { button, intervalMs } = store.simpleConfig;
   return `${button} · every ${intervalMs} ms`;
 });
-const delayMs = computed(() => store.simpleConfig.armDelayMs ?? DEFAULT_ARM_DELAY_MS);
 </script>
 
 <template>
@@ -31,7 +29,7 @@ const delayMs = computed(() => store.simpleConfig.armDelayMs ?? DEFAULT_ARM_DELA
         </div>
       </div>
       <div class="flex items-center gap-1 shrink-0">
-        <ArmedStartButton :script="script" :delay-ms="delayMs" size="xs" />
+        <ArmedStartButton :script="script" size="xs" />
         <UButton
           size="xs"
           color="neutral"

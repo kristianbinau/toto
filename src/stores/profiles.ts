@@ -1,7 +1,6 @@
 import { reactive, ref, watch, computed } from "vue";
 import { Store } from "@tauri-apps/plugin-store";
 import {
-  DEFAULT_ARM_DELAY_MS,
   DEFAULT_STATE,
   SIMPLE_SCRIPT_ID,
   buildSimpleScript,
@@ -119,7 +118,7 @@ export function useProfilesStore(): StoreShape {
     if (simpleConfig.hotkey) {
       const accel = simpleConfig.hotkey;
       desired.set(accel, () => {
-        armOrCancel(simpleScript(), simpleConfig.armDelayMs ?? DEFAULT_ARM_DELAY_MS);
+        armOrCancel(simpleScript(), 0);
       });
     }
     for (const entry of profiles) {
@@ -128,10 +127,7 @@ export function useProfilesStore(): StoreShape {
       desired.set(hotkey, () => {
         const current = profiles.find((p) => p.hotkey === hotkey);
         if (!current) return;
-        armOrCancel(
-          deepClone(current.script),
-          current.armDelayMs ?? simpleConfig.armDelayMs ?? DEFAULT_ARM_DELAY_MS,
-        );
+        armOrCancel(deepClone(current.script), 0);
       });
     }
     try {

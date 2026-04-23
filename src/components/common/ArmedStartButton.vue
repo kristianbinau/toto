@@ -6,7 +6,6 @@ import { useProfilesStore } from "../../stores/profiles";
 const props = withDefaults(
   defineProps<{
     script: Script;
-    delayMs: number;
     size?: "xs" | "sm" | "md";
     block?: boolean;
   }>(),
@@ -48,7 +47,7 @@ watch(running, (isNow, wasBefore) => {
 });
 
 function onClick() {
-  store.armOrCancel(JSON.parse(JSON.stringify(props.script)), props.delayMs);
+  store.armOrCancel(JSON.parse(JSON.stringify(props.script)), 2000);
 }
 
 const label = computed(() => {

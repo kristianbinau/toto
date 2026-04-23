@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { DEFAULT_ARM_DELAY_MS } from "../lib/types";
 import { useProfilesStore } from "../stores/profiles";
 import HotkeyInput from "./common/HotkeyInput.vue";
 
@@ -19,15 +18,6 @@ const intervalMs = computed({
     const n = Number(v);
     if (!Number.isFinite(n)) return;
     store.simpleConfig.intervalMs = Math.max(0.1, Math.min(60_000, n));
-  },
-});
-
-const armDelayMs = computed({
-  get: () => store.simpleConfig.armDelayMs ?? DEFAULT_ARM_DELAY_MS,
-  set: (v: number) => {
-    const n = Number(v);
-    if (!Number.isFinite(n)) return;
-    store.simpleConfig.armDelayMs = Math.max(0, Math.min(10_000, n));
   },
 });
 
@@ -64,7 +54,14 @@ const hotkey = computed({
 
     <div class="flex flex-col gap-3">
       <UFormField label="Mouse button" size="sm">
-        <URadioGroup v-model="button" :items="buttonItems" orientation="horizontal" size="sm" />
+        <URadioGroup
+          v-model="button"
+          :items="buttonItems"
+          indicator="hidden"
+          variant="table"
+          orientation="horizontal"
+          size="sm"
+        />
       </UFormField>
 
       <UFormField label="Interval" help="Milliseconds between clicks" size="sm">
@@ -73,21 +70,6 @@ const hotkey = computed({
 
       <UFormField label="Toggle hotkey" size="sm">
         <HotkeyInput v-model="hotkey" />
-      </UFormField>
-
-      <UFormField
-        label="Activation delay"
-        help="Countdown before the clicker actually starts, so the first click doesn't hit the Start button."
-        size="sm"
-      >
-        <UInputNumber
-          v-model="armDelayMs"
-          :min="0"
-          :max="10000"
-          :step="500"
-          size="sm"
-          class="w-full"
-        />
       </UFormField>
     </div>
   </UCard>
