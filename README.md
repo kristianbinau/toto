@@ -1,6 +1,8 @@
-# toto — Minimalistic Autoclicker
+# toto — Autoclicker
 
 A fast, lightweight autoclicker / macro runner built with **Tauri 2** (Rust backend) and **Vue 3** (frontend). Designed to be unobtrusive: small window, always-on-top, global hotkeys to toggle scripts without switching focus.
+
+Named after [oto](https://github.com/MathiasDuus/oto), a autoclicker my friend Mathias built a long time ago.
 
 ## Design Principle
 
@@ -52,7 +54,7 @@ toto/
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) 20.19+ (NuxtUI requires it)
+- [Node.js](https://nodejs.org/) 24+
 - [Rust](https://rustup.rs/) stable toolchain
 - Tauri system dependencies for your OS — see [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
 - Linux: `enigo` uses X11. On Wayland sessions, run under XWayland or set `WINIT_UNIX_BACKEND=x11`.
@@ -63,7 +65,7 @@ toto/
 npm install
 ```
 
-This installs the Vue toolchain, NuxtUI, `vue-router` (peer of NuxtUI), and the Tauri JS plugin bindings. Rust crates are fetched on first `cargo build`.
+This installs npm dependencies. Rust crates are fetched on first `cargo build`.
 
 ## Commands
 
