@@ -17,11 +17,15 @@ import { errorToast } from "../lib/toast";
 const STORE_FILE = "toto.json";
 const STATE_KEY = "state";
 
+type ArmEntry = { startedAt: number; delayMs: number; timerId: number };
+
 type StoreShape = {
   simpleConfig: SimpleConfig;
   activeMode: AppMode;
   profiles: ProfileEntry[];
   runningIds: Set<string>;
+  armingIds: Map<string, ArmEntry>;
+  armTick: number;
   hydrated: boolean;
   hydrate: () => Promise<void>;
   dispose: () => Promise<void>;
@@ -36,6 +40,10 @@ type StoreShape = {
   deleteProfile: (index: number) => Promise<void>;
 
   toggleScript: (script: Script) => Promise<void>;
+  armOrCancel: (script: Script, delayMs: number) => void;
+  cancelArm: (id: string) => void;
+  isArming: (id: string) => boolean;
+  armRemainingMs: (id: string) => number;
   stopAll: () => Promise<void>;
 
   isRunning: (id: string) => boolean;
@@ -45,6 +53,7 @@ let _singleton: StoreShape | null = null;
 let _tauriStore: Store | null = null;
 let _pollTimer: number | null = null;
 let _saveTimer: number | null = null;
+let _armTickTimer: number | null = null;
 let _lastHotkeyReq = 0;
 let _lastTrayActive: boolean | null = null;
 
@@ -72,6 +81,8 @@ export function useProfilesStore(): StoreShape {
   const profiles = reactive<ProfileEntry[]>([]);
   const activeMode = ref<AppMode>(DEFAULT_STATE.activeMode);
   const runningIds = reactive<Set<string>>(new Set());
+  const armingIds = reactive<Map<string, ArmEntry>>(new Map());
+  const armTick = ref(0);
   const hydrated = ref(false);
 
   const simpleScript = () => buildSimpleScript(simpleConfig);
@@ -107,14 +118,16 @@ export function useProfilesStore(): StoreShape {
     if (simpleConfig.hotkey) {
       const accel = simpleConfig.hotkey;
       desired.set(accel, () => {
-        void totoApi.toggleScript(simpleScript()).then(refreshRunning);
+        armOrCancel(simpleScript(), 0);
       });
     }
     for (const entry of profiles) {
       if (!entry.hotkey) continue;
-      const script = deepClone(entry.script);
-      desired.set(entry.hotkey, () => {
-        void totoApi.toggleScript(script).then(refreshRunning);
+      const hotkey = entry.hotkey;
+      desired.set(hotkey, () => {
+        const current = profiles.find((p) => p.hotkey === hotkey);
+        if (!current) return;
+        armOrCancel(deepClone(current.script), 0);
       });
     }
     try {
@@ -124,6 +137,48 @@ export function useProfilesStore(): StoreShape {
         errorToast("Hotkey registration failed", err);
       }
     }
+  }
+
+  function cancelArm(id: string) {
+    const entry = armingIds.get(id);
+    if (!entry) return;
+    clearTimeout(entry.timerId);
+    armingIds.delete(id);
+  }
+
+  function armOrCancel(script: Script, delayMs: number) {
+    const id = script.id;
+    if (runningIds.has(id)) {
+      void shape.toggleScript(script);
+      return;
+    }
+    if (armingIds.has(id)) {
+      cancelArm(id);
+      return;
+    }
+    const scriptCopy = deepClone(script);
+    const timerId = window.setTimeout(
+      () => {
+        armingIds.delete(id);
+        void shape.toggleScript(scriptCopy);
+      },
+      Math.max(0, delayMs),
+    );
+    armingIds.set(id, { startedAt: Date.now(), delayMs, timerId });
+  }
+
+  function isArming(id: string): boolean {
+    return armingIds.has(id);
+  }
+
+  function armRemainingMs(id: string): number {
+    const e = armingIds.get(id);
+    if (!e) return 0;
+    return Math.max(0, e.delayMs - (Date.now() - e.startedAt));
+  }
+
+  function cancelAllArming() {
+    for (const id of Array.from(armingIds.keys())) cancelArm(id);
   }
 
   async function refreshRunning() {
@@ -152,6 +207,10 @@ export function useProfilesStore(): StoreShape {
     },
     profiles,
     runningIds,
+    armingIds,
+    get armTick(): number {
+      return armTick.value;
+    },
     get hydrated(): boolean {
       return hydrated.value;
     },
@@ -184,6 +243,11 @@ export function useProfilesStore(): StoreShape {
       if (_pollTimer === null) {
         _pollTimer = window.setInterval(refreshRunning, 500);
       }
+      if (_armTickTimer === null) {
+        _armTickTimer = window.setInterval(() => {
+          if (armingIds.size > 0) armTick.value++;
+        }, 100);
+      }
     },
 
     async dispose() {
@@ -191,6 +255,11 @@ export function useProfilesStore(): StoreShape {
         clearInterval(_pollTimer);
         _pollTimer = null;
       }
+      if (_armTickTimer !== null) {
+        clearInterval(_armTickTimer);
+        _armTickTimer = null;
+      }
+      cancelAllArming();
       await unbindAll();
     },
 
@@ -215,6 +284,7 @@ export function useProfilesStore(): StoreShape {
       if (!prev) return;
       // If the id changed, stop the old id first.
       if (prev.script.id !== entry.script.id) {
+        cancelArm(prev.script.id);
         void totoApi.stopScript(prev.script.id).catch(() => {});
       }
       profiles.splice(index, 1, deepClone(entry));
@@ -232,6 +302,7 @@ export function useProfilesStore(): StoreShape {
     async deleteProfile(index: number) {
       const entry = profiles[index];
       if (!entry) return;
+      cancelArm(entry.script.id);
       await totoApi.stopScript(entry.script.id).catch(() => {});
       profiles.splice(index, 1);
     },
@@ -245,7 +316,13 @@ export function useProfilesStore(): StoreShape {
       await refreshRunning();
     },
 
+    armOrCancel,
+    cancelArm,
+    isArming,
+    armRemainingMs,
+
     async stopAll() {
+      cancelAllArming();
       try {
         await totoApi.stopAll();
       } catch (err) {

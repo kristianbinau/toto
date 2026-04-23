@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import type { Action, Key } from "../../lib/types";
 
 const props = defineProps<{
@@ -27,7 +28,7 @@ const coordItems = [
   { label: "Absolute", value: "Absolute" },
 ];
 const keyNameItems = [
-  { label: "Unicode char", value: "Unicode" },
+  { label: "Unicode", value: "Unicode" },
   { label: "Return", value: "Return" },
   { label: "Tab", value: "Tab" },
   { label: "Space", value: "Space" },
@@ -58,6 +59,20 @@ function currentKeyName(): string {
   if (props.modelValue.type !== "Key") return "Return";
   return props.modelValue.key.name;
 }
+
+// v-model wrappers for UInputNumber
+const delayMs = computed({
+  get: () => (props.modelValue.type === "Delay" ? props.modelValue.ms : 0),
+  set: (v: number) => update({ ms: Math.max(0.1, Number(v) || 0.1) }),
+});
+const moveX = computed({
+  get: () => (props.modelValue.type === "Move" ? props.modelValue.x : 0),
+  set: (v: number) => update({ x: Number(v) || 0 }),
+});
+const moveY = computed({
+  get: () => (props.modelValue.type === "Move" ? props.modelValue.y : 0),
+  set: (v: number) => update({ y: Number(v) || 0 }),
+});
 </script>
 
 <template>
@@ -143,22 +158,8 @@ function currentKeyName(): string {
 
     <template v-else-if="props.modelValue.type === 'Move'">
       <div class="flex gap-2">
-        <UInput
-          type="number"
-          :model-value="props.modelValue.x"
-          @update:model-value="update({ x: Number($event) || 0 })"
-          size="xs"
-          class="flex-1"
-          placeholder="x"
-        />
-        <UInput
-          type="number"
-          :model-value="props.modelValue.y"
-          @update:model-value="update({ y: Number($event) || 0 })"
-          size="xs"
-          class="flex-1"
-          placeholder="y"
-        />
+        <UInputNumber v-model="moveX" size="xs" class="flex-1" placeholder="x" />
+        <UInputNumber v-model="moveY" size="xs" class="flex-1" placeholder="y" />
         <USelect
           :items="coordItems"
           :model-value="props.modelValue.coord"
@@ -170,15 +171,7 @@ function currentKeyName(): string {
     </template>
 
     <template v-else-if="props.modelValue.type === 'Delay'">
-      <UInput
-        type="number"
-        :min="0.1"
-        :step="0.1"
-        :model-value="props.modelValue.ms"
-        @update:model-value="update({ ms: Math.max(0.1, Number($event) || 0.1) })"
-        size="xs"
-        placeholder="ms"
-      />
+      <UInputNumber v-model="delayMs" size="xs" placeholder="ms" />
     </template>
   </div>
 </template>
