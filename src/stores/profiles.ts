@@ -124,10 +124,14 @@ export function useProfilesStore(): StoreShape {
     }
     for (const entry of profiles) {
       if (!entry.hotkey) continue;
-      const script = deepClone(entry.script);
-      const delay = entry.armDelayMs ?? simpleConfig.armDelayMs ?? DEFAULT_ARM_DELAY_MS;
-      desired.set(entry.hotkey, () => {
-        armOrCancel(script, delay);
+      const hotkey = entry.hotkey;
+      desired.set(hotkey, () => {
+        const current = profiles.find((p) => p.hotkey === hotkey);
+        if (!current) return;
+        armOrCancel(
+          deepClone(current.script),
+          current.armDelayMs ?? simpleConfig.armDelayMs ?? DEFAULT_ARM_DELAY_MS,
+        );
       });
     }
     try {

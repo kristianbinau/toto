@@ -5,10 +5,8 @@ export type HotkeyHandler = () => void;
 const active = new Map<string, HotkeyHandler>();
 
 export async function bindHotkey(accel: string, handler: HotkeyHandler): Promise<void> {
-  if (active.has(accel)) {
-    await unregister(accel).catch(() => {});
-    active.delete(accel);
-  }
+  await unregister(accel).catch(() => {});
+  active.delete(accel);
   await register(accel, (event) => {
     if (event.state === "Pressed") handler();
   });
@@ -32,7 +30,7 @@ export async function reconcile(desired: Map<string, HotkeyHandler>): Promise<vo
     if (!desired.has(accel)) await unbindHotkey(accel);
   }
   for (const [accel, handler] of desired) {
-    await bindHotkey(accel, handler);
+    if (!active.has(accel)) await bindHotkey(accel, handler);
   }
 }
 
