@@ -2,7 +2,6 @@
 import { computed } from "vue";
 import type { ProfileEntry } from "../../lib/types";
 import { summarizeScript } from "../../lib/types";
-import { useProfilesStore } from "../../stores/profiles";
 import ArmedStartButton from "../common/ArmedStartButton.vue";
 import HotkeyDisplay from "../common/HotkeyDisplay.vue";
 
@@ -13,7 +12,6 @@ defineEmits<{
   delete: [];
 }>();
 
-const store = useProfilesStore();
 const summary = computed(() => summarizeScript(props.entry.script));
 </script>
 
