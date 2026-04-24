@@ -17,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.releases_created }}
-      tag_name: ${{ steps.release.outputs['src-tauri--tag_name'] }}
-      release_id: ${{ steps.release.outputs['src-tauri--id'] }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      release_id: ${{ steps.release.outputs.id }}
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         id: release
         with:
           config-file: release-please-config.json
